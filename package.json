@@ -1,0 +1,41 @@
+{
+  "name": "inkwell",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/copy-dictionaries.mjs",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "app": "node scripts/build-app.mjs",
+    "preview:page": "vite build -c vite.artifact.config.ts --mode artifact && node scripts/make-preview.mjs"
+  },
+  "dependencies": {
+    "@fontsource/courier-prime": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/source-sans-3": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.0",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-fs": "^2.5.2",
+    "@tiptap/core": "^3.31.3",
+    "@tiptap/extension-typography": "^3.31.3",
+    "@tiptap/extensions": "^3.31.3",
+    "@tiptap/pm": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
+    "dictionary-en": "^4.0.0",
+    "dictionary-ru": "^3.0.0",
+    "dictionary-uk": "^4.0.0",
+    "marked": "^18.0.13",
+    "nspell": "^2.1.5",
+    "turndown": "^7.2.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.5",
+    "@types/turndown": "^5.0.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
+  }
+}

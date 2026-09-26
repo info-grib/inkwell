@@ -1,0 +1,560 @@
+/* Inkwell: the "Typewriter" look.
+   Paper and ink, one accent, monospace type. Hard 1px lines on the page and sidebar;
+   rounded corners and a soft shadow on everything that floats (menus, bubble, dialogs). */
+
+:root {
+  accent-color: var(--accent);
+  /* a warm, softer paper (the first version, #f3f3f0 with pure white cards, was too bright for long sessions) */
+  --bg: #ebe8df;
+  --ink: #232320;
+  --muted: #67645b;
+  --faint: #9d998c;
+  --line: #d3cec1;
+  --card: #f5f3ed;
+  --side-veil: 0%;
+  --page-veil: 100%;
+  --accent-base: #2b4bd6;
+  --accent: var(--accent-base);
+  --accent-ink: #ffffff;
+  --accent-tint: color-mix(in srgb, var(--accent) 15%, transparent);
+  --sel: color-mix(in srgb, var(--accent) 26%, transparent);
+  --danger: #b3261e;
+  --radius: 8px;
+  --shadow: 0 8px 24px rgba(25, 25, 25, 0.14), 0 1px 3px rgba(25, 25, 25, 0.1);
+  --font-ui: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-doc: 'Courier Prime', 'IBM Plex Mono', 'Courier New', Courier, monospace;
+  --fs: 17px;
+}
+:root[data-ink-theme='dark'] {
+  --bg: #171716;
+  --ink: #e9e9e4;
+  --muted: #9a9a92;
+  --faint: #6a6a64;
+  --line: #34342f;
+  --card: #232321;
+  --accent: color-mix(in srgb, var(--accent-base) 55%, #ffffff);
+  --accent-ink: #101010;
+  --danger: #f2a29c;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+:root[data-doc-font='serif'] { --font-doc: 'Source Serif 4', Georgia, 'Times New Roman', serif; }
+:root[data-doc-font='sans'] { --font-doc: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+:root[data-doc-font='plex'] { --font-doc: 'IBM Plex Mono', ui-monospace, Menlo, monospace; }
+:root[data-ui-font='sans'] { --font-ui: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+:root[data-ui-font='system'] { --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+.hidden { display: none !important; }
+.spacer { flex: 1; }
+h1, h2, h3 { margin: 0; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+button.primary:hover { background: var(--ink); filter: opacity(0.85); }
+button.icon { border: none; padding: 2px 8px; font-size: 16px; line-height: 1; color: var(--muted); }
+button.icon:hover { color: var(--ink); background: var(--line); }
+button:disabled { opacity: 0.4; cursor: default; }
+input, textarea, select {
+  font: inherit; color: inherit; background: var(--card);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---- welcome ---------------------------------------------------------- */
+.screen { height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.welcome-card { max-width: 460px; text-align: center; }
+.welcome-card h1 { font-family: var(--font-ui); font-size: 28px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+.tagline { color: var(--muted); font-size: 13px; margin: 10px 0 28px; }
+.welcome-actions { display: flex; flex-direction: column; gap: 10px; }
+.welcome-actions button { padding: 11px 16px; font-size: 13px; }
+.hint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 22px; }
+
+/* ---- app layout -------------------------------------------------------- */
+#app {
+  display: grid;
+  grid-template-columns: 197px minmax(0, 1fr);
+  height: 100%;
+  height: 100dvh;
+}
+body.focus #app { grid-template-columns: minmax(0, 1fr); }
+body.focus #sidebar { display: none; }
+body.focus #topstrip > :not(#btnFocus), body.focus #status { opacity: 0; transition: opacity 0.4s; }
+body.focus #topstrip:hover > *, body.focus #status:hover { opacity: 1; }
+
+/* ---- sidebar ----------------------------------------------------------- */
+#sidebar {
+  background: var(--bg); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0; padding: 24px 0 12px;
+}
+.proj-head { padding: 0 8px 0 16px; position: relative; }
+.book-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  border: 1px solid transparent; border-radius: 6px; padding: 2px 6px 2px 0;
+  font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.3;
+}
+.book-btn:hover, .book-btn[aria-expanded='true'] { background: transparent; }
+#bookName { flex: 1; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.caret { font-size: 10px; color: var(--muted); letter-spacing: 0; }
+
+.menu {
+  position: absolute; left: 8px; right: -60px; top: calc(100% + 2px); z-index: 30; min-width: 220px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 4px; max-height: 70vh; overflow-y: auto;
+  font-size: 12px; text-transform: none; letter-spacing: 0;
+}
+.menu-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); padding: 6px 10px 3px; }
+.menu-sep { border-top: 1px solid var(--line); margin: 4px 0; }
+.menu-item {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  width: 100%; text-align: left; border: none; border-radius: 6px; padding: 6px 10px; font-weight: 400;
+}
+.menu-item:hover, .menu-item:focus-visible { background: var(--ink); color: var(--bg); outline: none; }
+.menu-item .mi-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-item .mi-s { font-size: 10px; opacity: 0.6; white-space: nowrap; }
+.menu-item.current .mi-t { font-weight: 700; }
+.menu-item.current .mi-t::before { content: '\2713\00a0'; color: var(--accent); }
+.menu-item.current:hover .mi-t::before, .menu-item.current:focus-visible .mi-t::before { color: inherit; }
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger:hover, .menu-item.danger:focus-visible { color: var(--bg); background: var(--danger); }
+
+#lists { flex: 1; overflow-y: auto; padding: 14px 16px 8px; display: flex; flex-direction: column; gap: 6px; }
+#lists section { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+#lists section + section { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 14px; }
+h3 {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 2px;
+}
+.doclist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; position: relative; }
+.doclist li {
+  display: flex; align-items: center; gap: 4px; padding: 4px; cursor: pointer; position: relative;
+  user-select: none; -webkit-user-select: none; touch-action: pan-y;
+}
+.doclist li:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.doclist li.active { background: var(--ink); color: var(--bg); }
+.doclist li:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.doclist .num { width: 32px; flex: none; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.doclist li.active .num { color: inherit; }
+.doclist .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doclist .grip { color: var(--faint); font-size: 11px; letter-spacing: -1px; opacity: 0; transition: opacity 0.15s ease; cursor: grab; padding: 0; width: 0; overflow: hidden; touch-action: none; }
+.doclist li:hover .grip, .doclist li:focus-visible .grip, .doclist li:focus-within .grip { opacity: 1; width: 14px; }
+.doclist .x { border: none; padding: 0; width: 0; overflow: hidden; font-size: 13px; color: var(--faint); opacity: 0; line-height: 1; background: transparent; }
+.doclist li:hover .x, .doclist li:focus-within .x { opacity: 1; width: 16px; }
+.doclist .x:hover { color: inherit; background: transparent; }
+.doclist li.active .grip, .doclist li.active .x { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.doclist.drop-here { background: color-mix(in srgb, var(--accent) 9%, transparent); border-radius: 4px; }
+.doclist li.ghost { outline: 1px dashed var(--muted); outline-offset: -1px; opacity: 0.45; }
+.doclist .empty { color: var(--muted); padding: 4px; cursor: default; }
+.doclist .empty:hover { background: transparent; }
+/* the "Not numbered" divider: a thin label between the numbered items and the "?" ones; also the drop target
+   for turning a chapter into "?" (drag below it) or giving a "?" one a number (drag above it) */
+.doclist li.list-divider {
+  margin: 6px 0 2px; padding: 2px 4px 4px; border-top: 1px dashed var(--line);
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); cursor: default;
+}
+.doclist li.list-divider:hover { background: transparent; }
+.newrow { display: flex; align-items: center; gap: 4px; border: none; border-radius: 0; padding: 4px; color: var(--muted); text-align: left; }
+.newrow .plus { width: 32px; flex: none; }
+.newrow:hover { color: var(--ink); background: transparent; }
+.lift {
+  position: fixed; z-index: 60; display: flex; align-items: center; gap: 4px; padding: 4px; pointer-events: none;
+  background: var(--card); color: var(--ink); border-radius: 6px; box-shadow: var(--shadow); cursor: grabbing;
+}
+.lift .num { width: 32px; flex: none; font-size: 11px; letter-spacing: 0.14em; color: var(--muted); }
+.lift .t { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dropline { position: fixed; z-index: 55; height: 2px; background: var(--accent); pointer-events: none; }
+
+.side-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 8px 12px 0; }
+.side-foot button { border: 0; padding: 4px; font-size: 11px; color: var(--muted); }
+.side-foot button:hover { color: var(--ink); background: transparent; }
+
+/* ---- center: top strip, page, footer -------------------------------------- */
+#center { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+#topstrip {
+  height: 38px; flex: none; display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: 12px;
+  padding: 0 max(24px, calc((100% - 1000px) / 2));
+}
+#topstrip button { border: 0; padding: 0; color: var(--muted); font-size: 12px; }
+#topstrip button:hover { background: transparent; color: var(--ink); }
+#topstrip button[aria-pressed='true'] { color: var(--ink); }
+#btnFocus { color: var(--ink) !important; }
+#btnSidebarToggle { padding: 4px 6px; margin: -4px -6px; font-size: 13px; line-height: 1; }
+/* the title that collapsed out of the page: small, muted, and it takes the free space of the strip */
+#topTitle {
+  flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11px !important; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint) !important;
+  opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; cursor: pointer;
+}
+#topTitle.show { opacity: 1; visibility: visible; }
+#topTitle:hover { color: var(--ink) !important; }
+
+/* text scrolls away softly under the strip and above the footer, not into a hard edge */
+#scroll {
+  flex: 1; overflow-y: auto; position: relative;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px, #000 calc(100% - 18px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 26px, #000 calc(100% - 18px), transparent 100%);
+}
+#page { display: block; padding: 0 24px 0 64px; max-width: 800px; margin: 0 auto; }
+#docHead { padding: 34px 0 0; }
+.numrow { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.numrow label { cursor: text; }
+#docNum {
+  width: 42px; min-width: 26px; border: 1px solid transparent; border-radius: 0; background: transparent; color: var(--ink);
+  padding: 2px 4px; font-size: 11px; letter-spacing: 0; text-align: left;
+}
+#docNum:hover { border-bottom-color: var(--muted); }
+#docNum:focus, #docNum:focus-visible { outline: none; border-color: var(--ink); background: var(--card); }
+#numHint { display: none; font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--faint); }
+.numrow:focus-within #numHint { display: inline; }
+/* Spell-check language: a plain text picker in the status bar (en / ua / ru) instead of any kind of dropdown --
+   the fewer moving parts, the less it looks like a separate control bolted onto the app. The active language
+   (whether it's this chapter's own override or just the book's default) is the one in the accent colour; the
+   others sit at the same muted weight as the rest of the status bar. Clicking the active one turns spell-check
+   off for this chapter/note; clicking another switches straight to it. */
+#spellFoot { display: flex; align-items: center; gap: 6px; }
+#spellFoot .spell-opt {
+  border: none; background: transparent; color: var(--faint); padding: 0; font: inherit; font-size: 11px;
+  letter-spacing: 0.02em; cursor: pointer;
+}
+#spellFoot .spell-opt:hover { color: var(--ink); }
+#spellFoot .spell-opt.current { color: var(--accent); font-weight: 600; }
+#spellFoot .spell-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+#docTitle {
+  display: block; width: 100%; margin: 6px 0 0; border: none; background: transparent; padding: 0; border-radius: 0;
+  font-family: var(--font-doc); font-size: calc(var(--fs) * 1.18); line-height: 1.3; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; resize: none; overflow: hidden; overflow-wrap: anywhere; min-height: 1.3em;
+}
+#docTitle:focus, #docTitle:focus-visible { outline: none; }
+#margin { display: none; }
+
+/* ---- previous / next -------------------------------------------------------------- */
+#docNav {
+  display: flex; justify-content: space-between; gap: 16px; margin: 36px 0 48px; padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+#docNav:empty { display: none; margin: 0; padding: 0; border: 0; }
+.docnav-link {
+  display: flex; flex-direction: column; gap: 3px; max-width: 46%; padding: 4px 0; background: none; border: 0;
+  cursor: pointer; color: var(--ink); font-family: var(--font-ui);
+}
+.docnav-next { align-items: flex-end; text-align: right; margin-left: auto; }
+.docnav-dir { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+.docnav-t { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.docnav-link:hover .docnav-dir, .docnav-link:hover .docnav-t { color: var(--ink); }
+
+#status {
+  flex: none; height: 40px; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px;
+  font-variant-numeric: tabular-nums; padding: 0 max(24px, calc((100% - 1000px) / 2));
+}
+#status > span:not(.spacer):not(:first-child)::before { content: '\00b7'; margin-right: 8px; }
+#status #stSave::before { content: none !important; }
+
+/* ---- the text itself ---------------------------------------------------- */
+.tiptap {
+  font-family: var(--font-doc); font-size: var(--fs); line-height: 1.8; outline: none;
+  min-height: 50vh; padding: 26px 0 40vh; caret-color: var(--accent);
+}
+.tiptap p { margin: 0; }
+.tiptap p + p { text-indent: 3ch; }
+.tiptap h1, .tiptap h2, .tiptap h3 {
+  font-size: 1em; line-height: 1.8; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: inherit;
+  display: block; padding: 0; margin: 1em 0 0.2em;
+}
+.tiptap h3 { font-weight: 400; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.tiptap h1:first-child, .tiptap h2:first-child, .tiptap h3:first-child { margin-top: 0; }
+.tiptap blockquote { margin: 0.6em 0; padding-left: 3ch; border-left: 1px solid var(--muted); color: var(--muted); }
+.tiptap blockquote p, .tiptap li p { text-indent: 0; }
+.tiptap ul, .tiptap ol { padding-left: 3ch; margin: 0.4em 0; }
+.tiptap ul { list-style: '\2013\00a0'; }
+.tiptap hr { border: none; text-align: center; margin: 0; padding: 8px 0 0; height: auto; cursor: default; }
+.tiptap hr::after { content: '#'; color: var(--muted); }
+.tiptap hr.ProseMirror-selectednode::after { color: var(--accent); }
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder); color: var(--faint); float: left; height: 0; pointer-events: none; text-indent: 0;
+}
+.tiptap ::selection { background: var(--sel); }
+.tiptap strong { font-weight: 700; }
+
+/* ---- spell-check: our own red underlines (see src/spellcheck.ts) --------------- */
+.spell-bad {
+  text-decoration: underline; text-decoration-style: wavy; text-decoration-color: var(--danger);
+  text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-skip-ink: none;
+}
+
+/* ---- remarks: marked text ------------------------------------------------- */
+.remark { border-bottom: 2px dotted var(--accent); cursor: pointer; border-radius: 0; }
+.remark[data-resolved='1'] { border-bottom-color: var(--line); }
+.remark-active { background: var(--accent-tint); border-radius: 8px; box-shadow: 0 0 0 3px var(--accent-tint); }
+.rsup { color: var(--accent); font-family: var(--font-ui); font-size: 10px; font-weight: 500; padding-left: 2px; vertical-align: super; line-height: 0; user-select: none; text-indent: 0; }
+
+/* ---- remark notes (margin column, or the drawer on narrow windows) ------------ */
+#remarksPanel h3 { padding: 14px 14px 8px; margin: 0; }
+.small { font-size: 11px; text-transform: none; letter-spacing: 0; font-weight: 400; display: flex; gap: 4px; align-items: center; cursor: pointer; }
+.small input { padding: 0; accent-color: var(--accent); }
+#remarksPanel { background: var(--bg); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+#remarkList { display: flex; flex-direction: column; }
+#remarksPanel #remarkList { flex: 1; overflow-y: auto; padding: 4px 14px 24px; gap: 14px; }
+.rcard { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; line-height: 1.55; position: relative; }
+.rnum { color: var(--accent); font-weight: 500; flex: none; min-width: 8px; position: relative; text-align: center; }
+.rcard.active .rnum::before, .rcard:hover .rnum::before {
+  content: ''; position: absolute; inset: -4px -8px; border-radius: 8px; background: var(--accent-tint); z-index: -1;
+}
+.rbody { flex: 1; min-width: 0; }
+.rcard .quote { display: none; }
+.rcard textarea.rtext {
+  display: block; width: 100%; border: none; background: transparent; padding: 0; margin: 0; resize: none; overflow: hidden;
+  border-radius: 0; min-height: 1.55em; line-height: 1.55; color: var(--ink);
+}
+.rcard textarea.rtext:focus-visible { outline: none; }
+.rcard textarea.rtext::placeholder { color: var(--faint); }
+.rcard .acts { display: flex; gap: 12px; margin-top: 4px; color: var(--muted); opacity: 0; transition: opacity 0.15s ease; }
+.rcard:hover .acts, .rcard:focus-within .acts, .rcard.active .acts { opacity: 1; }
+.rcard .acts button { border: 0; padding: 0; background: transparent; font-size: 11px; color: var(--muted); text-decoration: underline; }
+.rcard .acts button:hover { color: var(--ink); background: transparent; }
+.rcard.done { opacity: 0.55; }
+.rcard.lost .rtext { color: var(--muted); font-style: italic; }
+.remarks-empty { color: var(--muted); font-size: 12px; line-height: 1.6; padding: 4px 0; }
+/* in the drawer the cards need to say which words they are about */
+#remarksPanel .rcard { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; }
+#remarksPanel .rcard .quote {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  font-family: var(--font-doc); font-size: 13px; color: var(--muted); cursor: pointer; margin-bottom: 6px;
+  border-left: 2px solid var(--accent); padding-left: 8px;
+}
+#remarksPanel .rcard.lost .quote { border-left-color: var(--line); font-style: italic; cursor: default; }
+#remarksPanel .rcard .acts { opacity: 1; }
+#remarksPanel .rcard textarea.rtext { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; background: var(--bg); overflow: auto; }
+/* in the margin: absolutely placed beside their paragraph */
+#margin #remarkList { position: relative; }
+#margin .rcard { position: absolute; left: 0; right: 24px; }
+#margin .remarks-empty { display: none; }
+
+/* ---- floating things: bubble, slash menu, line handles and menu ------------------- */
+.fx { position: fixed; z-index: 40; }
+#bubble {
+  display: flex; align-items: stretch; white-space: nowrap; background: var(--ink); color: var(--bg);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; user-select: none; -webkit-user-select: none; font-size: 12px; line-height: 1;
+}
+#bubble button { border: 0; border-radius: 0; padding: 8px 10px; min-width: 0; color: inherit; background: transparent; }
+#bubble button:hover { background: color-mix(in srgb, var(--bg) 18%, transparent); }
+#bubble button.on { background: color-mix(in srgb, var(--bg) 26%, transparent); }
+#bubble .sep { width: 1px; background: color-mix(in srgb, var(--bg) 28%, transparent); margin: 6px 0; }
+#bubble button.remark-btn { background: var(--accent); color: var(--accent-ink); font-weight: 500; }
+#bubble button.remark-btn:hover { filter: brightness(1.1); background: var(--accent); }
+.fmenu {
+  background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 4px; font-size: 12px; line-height: 1.4; user-select: none; -webkit-user-select: none; min-width: 212px;
+}
+.fmenu .fl { padding: 5px 10px 3px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.fmenu .fsep { border-top: 1px solid var(--line); margin: 7px 0; }
+.fmenu .fi { display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+.fmenu .fi .ic { width: 16px; text-align: center; font-weight: 500; }
+.fmenu .fi .fhint { margin-left: auto; font-size: 10px; opacity: 0.6; }
+.fmenu .fi.accent { color: var(--accent); }
+.fmenu .fi.sel, .fmenu .fi:hover { background: var(--ink); color: var(--bg); }
+.fmenu .fi.off { opacity: 0.4; cursor: default; }
+.fmenu.ctx { z-index: 80; min-width: 190px; }
+.fmenu .fi.danger:hover { background: var(--danger); color: var(--bg); }
+#slashMenu { width: 300px; }
+#gutter { display: flex; gap: 2px; font-size: 13px; line-height: 1; color: var(--faint); user-select: none; -webkit-user-select: none; z-index: 35; }
+#gutter button {
+  width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  color: var(--faint); background: transparent; font-family: var(--font-ui); letter-spacing: -1px;
+}
+#gutter button:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+#gutter button.open { background: var(--ink); color: var(--bg); }
+#gutter .grip { cursor: grab; touch-action: none; }
+.blockdrop { z-index: 45; }
+.blockghost { z-index: 44; pointer-events: none; border-radius: 4px; background: color-mix(in srgb, var(--accent) 12%, transparent); outline: 1px dashed var(--accent); }
+
+/* inline rename in the sidebar */
+.doclist input.rename { flex: 1; min-width: 0; padding: 0 4px; margin: 0; font: inherit; border: 1px solid var(--ink); border-radius: 0; background: var(--card); color: var(--ink); height: 1.7em; }
+.doclist li.active input.rename { background: var(--card); color: var(--ink); }
+
+/* ---- toast / modal ------------------------------------------------------- */
+#toast {
+  position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: var(--radius);
+  box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; z-index: 70; font-size: 12px;
+}
+#toast button { color: var(--bg); border-color: color-mix(in srgb, var(--bg) 50%, transparent); padding: 2px 8px; }
+dialog {
+  background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 0; width: min(560px, 92vw); box-shadow: var(--shadow); font-size: 13px;
+  max-height: calc(100dvh - 24px); overflow-y: auto;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+#modalForm { padding: 18px 20px 16px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.modal-head h2 { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
+.modal-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-foot:empty { display: none; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: none; }
+.row label { flex: 1; }
+.row .sub { color: var(--muted); font-size: 11px; }
+.row input[type='color'] { width: 44px; height: 30px; padding: 2px; }
+.row .inline { display: flex; align-items: center; gap: 8px; }
+/* A plain, native <input type="range"> looks like an OS control dropped into the app; restyle it as a thin
+   track with a small dot, in the app's own accent colour, so it reads as part of the interface instead of
+   as a stray widget. */
+.row input[type='range'] {
+  -webkit-appearance: none; appearance: none;
+  width: 120px; height: 16px; margin: 0;
+  background: transparent; cursor: pointer;
+}
+.row input[type='range']::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: var(--line); }
+.row input[type='range']::-moz-range-track { height: 3px; border-radius: 2px; background: var(--line); border: none; }
+.row input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4.5px;
+  border-radius: 50%; background: var(--accent); border: none;
+}
+.row input[type='range']::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: none; }
+.row input[type='range']:hover::-webkit-slider-thumb { background: color-mix(in srgb, var(--accent) 85%, black); }
+.row input[type='range']:focus-visible { outline: none; }
+.row input[type='range']:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row input[type='range']:focus-visible::-moz-range-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
+.list { max-height: 50vh; overflow-y: auto; }
+.list .item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.list .item:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.list .item.sel { background: color-mix(in srgb, var(--ink) 6%, transparent); outline: 1px solid var(--ink); }
+.preview {
+  margin-top: 12px; padding: 12px 14px; max-height: 32vh; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--card);
+  font-family: var(--font-doc); font-size: 15px; line-height: 1.6;
+}
+.preview p { margin: 0 0 0.7em; }
+.note { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.sub { color: var(--muted); font-size: 11px; }
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 6px; width: 100%; }
+.pick-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); opacity: 0; pointer-events: none; }
+.import-opts { margin-top: 6px; }
+.import-preview ol { margin: 6px 0 0; padding-left: 1.4em; font-family: var(--font-ui); font-size: 12px; line-height: 1.6; }
+
+/* ---- Mac: translucent window, "Zen" style ----------------------------------------
+   The window itself is see-through (the system blurs what is behind it). The sidebar sits directly on it;
+   the page is a solid, rounded card floating beside it, so reading is never affected. */
+html.translucent, html.translucent body { background: transparent; }
+/* The 8px gap around the page card (below) used to be plain window glass, at a different, always-fuller
+   transparency than the sidebar right next to it, however you'd set the slider. Tint it to the sidebar's own
+   level instead, so the gap reads as part of the same surface rather than a mismatched hole. */
+body.translucent #app { background: color-mix(in srgb, var(--bg) var(--side-veil), transparent); }
+body.translucent #sidebar { background: color-mix(in srgb, var(--bg) var(--side-veil), transparent); border-right: 0; }
+body.translucent #center { background: color-mix(in srgb, var(--bg) var(--page-veil), transparent); margin: 8px 8px 8px 0; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
+body.translucent.focus #center { margin: 0; border-radius: 0; border: 0; }
+
+/* A plain strip along the very top of the window, the full width, with nothing in it: the whole thing is
+   one easy target for moving the window (the traffic-light buttons float over its left end; nothing of
+   ours sits there to get in their way). Everything else shifts down to make room, once, here, instead of
+   each part separately leaving space so the light buttons have somewhere to go. */
+#winGrip { display: none; }
+body.overlay #winGrip { display: block; position: fixed; top: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+body.overlay #welcome { padding-top: 32px; }
+body.overlay #app { padding-top: 32px; }
+
+@media (min-width: 861px) {
+  /* Hide the sidebar and let the text/margin columns use the whole window. The choice is remembered
+     (localStorage), and the toggle button/shortcut only exist at this width — below it the sidebar is
+     already a drawer (see #btnNav / .only-small), so there's nothing to collapse. */
+  body.sidebar-hidden #app { grid-template-columns: minmax(0, 1fr); }
+  body.sidebar-hidden #sidebar { display: none; }
+}
+
+/* ---- width tiers ------------------------------------------------------------------
+   1360px and up : sidebar | text, centred by default; opened remarks grow a margin column (up to 380px)
+   1080 - 1359px : sidebar | text, centred by default; opened remarks get a narrower margin column (260px)
+   861 - 1079px  : sidebar | text; remarks always live in a drawer that slides in from the right
+   860px and less: the chapter list slides in from the left too (phone)
+   At every width the page starts as a single centred column -- remarks (in the margin, or the drawer
+   below 1080px) only appear once opened, with #btnRemarksToggle or by adding/selecting a remark. */
+.only-small { display: none; }
+@media (min-width: 1080px) {
+  #page { display: grid; grid-template-columns: minmax(0, 700px); justify-content: center; max-width: none; margin: 0; padding: 0 24px; }
+  #margin { display: none; position: relative; padding-top: 0; }
+  #remarksPanel { display: none !important; }
+  body.remarks-open:not(.focus) #page {
+    grid-template-columns: minmax(0, 1fr) 260px; justify-content: normal; padding: 0 24px 0 64px;
+  }
+  body.remarks-open:not(.focus) #margin { display: block; }
+  body.remarks-open:not(.focus) .tiptap { padding-right: 40px; }
+}
+@media (min-width: 1360px) {
+  /* the text and margin columns grow with the window (up to a point), instead of leaving a fixed 1000px
+     block stranded in a lot of empty space on a big screen */
+  body.remarks-open:not(.focus) #page {
+    grid-template-columns: clamp(660px, 46vw, 780px) clamp(340px, 22vw, 380px); justify-content: center; padding: 0 24px;
+  }
+}
+@media (max-width: 1079px) {
+  #remarksPanel {
+    position: fixed; top: 0; bottom: 0; right: 0; z-index: 20; width: min(340px, 90vw);
+    transform: translateX(105%); transition: transform 0.2s ease; box-shadow: var(--shadow);
+  }
+  body.remarks-open:not(.focus) #remarksPanel { transform: none; }
+  body.focus #remarksPanel { display: none !important; }
+}
+@media (max-width: 860px) {
+  #app, body.focus #app { grid-template-columns: minmax(0, 1fr); }
+  .only-small { display: inline-block; }
+  #sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 20; width: min(300px, 86vw);
+    transform: translateX(-105%); transition: transform 0.2s ease; box-shadow: var(--shadow);
+  }
+  body.focus #sidebar { display: none !important; }
+  body.nav-open #sidebar { transform: none; }
+  #page { padding: 0 16px; }
+  #topstrip { padding: 0 16px; height: 48px; }
+  /* the drawer slides in over the whole window (fixed, top: 0), so it doesn't get #app's own top padding;
+     give it its own, so its book title doesn't sit under the traffic-light buttons when open */
+  body.overlay #sidebar { padding-top: 32px; }
+  /* the drawer (chapters button, below) already gets the sidebar out of the way here, so the separate
+     collapse toggle has nothing to do */
+  #btnSidebarToggle { display: none; }
+  #status { flex-wrap: wrap; gap: 0 8px; height: auto; min-height: 40px; padding: 6px 16px max(6px, env(safe-area-inset-bottom)); }
+  #gutter { display: none !important; }
+  /* fingers need room: every button, row and field is at least 44px tall */
+  button, select, input:not([type='checkbox']):not([type='range']):not([type='file']):not([type='color']) { min-height: 44px; }
+  #topstrip button { min-width: 44px; padding: 0 8px; }
+  #bubble button { min-width: 44px; padding: 0 12px; }
+  .doclist li { min-height: 44px; }
+  .doclist .x, .doclist .grip { opacity: 0.7; min-width: 32px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .side-foot { gap: 0; }
+  .side-foot button, .newrow { min-height: 44px; }
+  .menu-item { min-height: 44px; align-items: center; }
+  .small { min-height: 44px; }
+  .small input { width: 20px; height: 20px; }
+  .rcard .acts { opacity: 1; }
+  .rcard .acts button { min-height: 44px; padding: 6px 12px; }
+  .doclist .empty { min-height: 0; }
+  #docTitle, #docNum { min-height: 0; }
+  .fmenu .fi { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #sidebar, #remarksPanel, body.focus #topstrip > *, body.focus #status, .doclist .grip, .rcard .acts { transition: none; }
+}
+
+/* macOS "Reduce transparency": no see-through window, the sidebar gets its own solid colour */
+@media (prefers-reduced-transparency: reduce) {
+  html.translucent, body.translucent { background: var(--bg); }
+  body.translucent #sidebar, body.translucent #center { background: var(--bg); }
+}

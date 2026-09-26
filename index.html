@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-ink-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Inkwell</title>
+  <link rel="icon" href="data:," />
+</head>
+<body>
+  <!-- Mac app only: a plain strip reserved for moving the window, full width, above everything else.
+       See body.overlay #winGrip in style.css. Harmless (display: none) everywhere else. -->
+  <div id="winGrip" data-tauri-drag-region aria-hidden="true"></div>
+  <!-- Welcome / project chooser -->
+  <div id="welcome" class="screen hidden">
+    <div class="welcome-card">
+      <h1>Inkwell</h1>
+      <p class="tagline">A quiet place to write your novel and articles.</p>
+      <div class="welcome-actions">
+        <button id="btnContinue" class="primary hidden"></button>
+        <button id="btnPick" class="primary hidden">Choose your books folder…</button>
+        <button id="btnOpfs" class="hidden">Use browser storage instead</button>
+      </div>
+      <p id="welcomeHint" class="hint"></p>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <div id="app" class="hidden">
+    <aside id="sidebar">
+      <div class="proj-head" data-tauri-drag-region>
+        <button id="bookBtn" class="book-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Switch, add or delete books">
+          <span id="bookName"></span><span class="caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <div id="bookMenu" class="menu hidden" role="menu"></div>
+      </div>
+      <nav id="lists">
+        <section>
+          <h3>Chapters</h3>
+          <ul id="chapterList" class="doclist"></ul>
+          <button id="addChapter" class="newrow" type="button" title="New chapter"><span class="plus">+</span><span>New</span></button>
+        </section>
+        <section>
+          <h3>Notes</h3>
+          <ul id="noteList" class="doclist"></ul>
+          <button id="addNote" class="newrow" type="button" title="New note"><span class="plus">+</span><span>New</span></button>
+        </section>
+      </nav>
+      <div class="side-foot">
+        <button id="btnHistory" type="button" aria-label="History" title="Earlier versions of this text">hist</button>
+        <button id="btnTrash" type="button" aria-label="Trash" title="Restore deleted chapters and notes">bin</button>
+        <button id="btnImport" type="button" aria-label="Import" title="Add chapters from Markdown files">in</button>
+        <button id="btnExport" type="button" aria-label="Export" title="Export to Markdown">out</button>
+        <button id="btnSettings" type="button" aria-label="Settings" title="Appearance and preferences">set</button>
+      </div>
+    </aside>
+
+    <main id="center">
+      <header id="topstrip" data-tauri-drag-region>
+        <button id="btnNav" class="only-small" type="button" title="Chapters and notes">chapters</button>
+        <button id="btnSidebarToggle" type="button" title="Hide sidebar (Ctrl/Cmd+\)" aria-label="Hide sidebar (Ctrl/Cmd+\)" aria-pressed="false">&#9666;</button>
+        <button id="topTitle" type="button" tabindex="-1" title="Back to the top of this page" aria-hidden="true"></button>
+        <button id="btnRemarksToggle" type="button" title="Show remarks" aria-pressed="false">remarks</button>
+        <button id="btnResolved" class="hidden" type="button" title="Show or hide resolved remarks">resolved</button>
+        <button id="btnFocus" type="button" title="Focus mode (Ctrl/Cmd+Shift+F)">focus</button>
+      </header>
+      <div id="scroll">
+        <div id="page">
+          <div id="docColumn">
+            <div id="docHead">
+              <div class="numrow">
+                <label id="docKind" for="docNum">Chapter</label>
+                <input id="docNum" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Number" />
+                <span id="numHint"></span>
+              </div>
+              <textarea id="docTitle" rows="1" spellcheck="false" placeholder="Untitled" aria-label="Title"></textarea>
+            </div>
+            <div id="editor"></div>
+            <nav id="docNav" aria-label="Previous and next"></nav>
+          </div>
+          <div id="margin" aria-label="Remarks"></div>
+        </div>
+      </div>
+      <footer id="status">
+        <span id="stWords"></span>
+        <span id="stTotal"></span>
+        <span id="stToday"></span>
+        <span class="spacer"></span>
+        <div id="spellFoot" role="group" aria-label="Spell-check language">
+          <button class="spell-opt" type="button" data-value="en">en</button>
+          <button class="spell-opt" type="button" data-value="uk">ua</button>
+          <button class="spell-opt" type="button" data-value="ru">ru</button>
+        </div>
+        <span id="stSave"></span>
+      </footer>
+    </main>
+
+    <aside id="remarksPanel">
+      <h3><span>Remarks</span>
+        <label class="small"><input type="checkbox" id="showResolved" /> resolved</label>
+        <button id="remarksClose" class="icon" type="button" title="Close remarks" aria-label="Close remarks">&times;</button>
+      </h3>
+      <div id="remarkList"></div>
+    </aside>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+
+  <!-- One reusable modal -->
+  <dialog id="modal">
+    <form method="dialog" id="modalForm">
+      <div class="modal-head"><h2 id="modalTitle"></h2><button type="button" id="modalClose" class="icon" aria-label="Close">&times;</button></div>
+      <div id="modalBody"></div>
+      <div id="modalFoot" class="modal-foot"></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
