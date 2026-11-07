@@ -413,6 +413,10 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
 .row .sub { color: var(--muted); font-size: 11px; }
 .row input[type='color'] { width: 44px; height: 30px; padding: 2px; }
 .row .inline { display: flex; align-items: center; gap: 8px; }
+.iconpick { display: flex; gap: 8px; }
+.iconpick button { padding: 3px; border: 2px solid transparent; border-radius: 12px; background: none; cursor: pointer; line-height: 0; }
+.iconpick button.on { border-color: var(--accent, currentColor); }
+.iconpick img { width: 44px; height: 44px; display: block; }
 /* A plain, native <input type="range"> looks like an OS control dropped into the app; restyle it as a thin
    track with a small dot, in the app's own accent colour, so it reads as part of the interface instead of
    as a stray widget. */

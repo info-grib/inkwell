@@ -15,3 +15,9 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+
+# Mac only: switching the app icon from Settings.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSData", "NSString", "NSBundle"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSImage", "NSResponder", "NSWorkspace"] }
