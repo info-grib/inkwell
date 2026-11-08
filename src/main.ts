@@ -127,7 +127,7 @@ interface Settings {
   dashes: boolean;
   goal: number;
 }
-const DEFAULT_ACCENT = '#2b4bd6';
+const DEFAULT_ACCENT = '#031152';
 const DEFAULTS: Settings = {
   theme: 'auto', docFont: 'courier', uiFont: 'plex', size: 17, accent: '', translucent: true, sideTransp: 100, pageTransp: 0, appIcon: 'ink',
   quotes: 'english', dashes: true, goal: 500,
@@ -331,6 +331,8 @@ async function enterApp() {
   const target = (lastId && p.find(lastId)) || (p.data.chapters[0] && p.find(p.data.chapters[0].id)) || (p.data.notes[0] && p.find(p.data.notes[0].id));
   if (target) await openDoc(target.kind, target.meta.id);
   else { const m = await p.addDoc('chapters', ''); await openDoc('chapters', m.id); }
+  // On a phone the app opens on the list of chapters, like a contents page.
+  if (window.matchMedia('(max-width: 600px)').matches) document.body.classList.add('nav-open');
 
   // Count words in everything else in the background, for totals and today's goal.
   for (const kind of ['chapters', 'notes'] as Kind[]) {
@@ -1110,6 +1112,8 @@ function renderRemarks(force: boolean) {
   const rb = $('#btnResolved');
   rb.classList.toggle('hidden', !isWide() || !remarksShown() || nResolved === 0);
   rb.textContent = `${showResolved ? 'hide' : 'show'} resolved (${nResolved})`;
+  const nOpen = cur.remarks.filter((r) => !r.resolved && ranges.has(r.id)).length;
+  $('#btnRemarksToggle').textContent = nOpen ? `remarks ${nOpen}` : 'remarks';
 
   const sig = JSON.stringify([shown.map((r) => [r.id, r.resolved, ranges.get(r.id)?.text ?? null]), showResolved, cur.id, isWide()]);
   if (!force && sig === remarkSig) { scheduleLayout(); return; }
@@ -1239,7 +1243,9 @@ $('#btnRemarksToggle').onclick = () => toggleRemarksPanel();
 
 function toggleFocus(on?: boolean) {
   document.body.classList.toggle('focus', on ?? !document.body.classList.contains('focus'));
-  if (document.body.classList.contains('focus')) editor?.commands.focus();
+  const f = document.body.classList.contains('focus');
+  $('#btnFocus').textContent = f ? 'exit focus' : 'focus';
+  if (f) editor?.commands.focus();
 }
 $('#btnFocus').onclick = () => toggleFocus();
 $('#remarksClose').onclick = () => toggleRemarksPanel(false);
@@ -1262,6 +1268,77 @@ function setSidebarHidden(v: boolean) {
 }
 setSidebarHidden(sidebarHidden);
 $('#btnSidebarToggle').onclick = () => setSidebarHidden(!sidebarHidden);
+
+// ============================================================== phones =====
+// Up to 600px wide the chapter list is a whole screen of its own ("‹ chapters" goes back to it), and remarks,
+// menus and the right-click menu come up from the bottom as sheets (see the 600px block in style.css).
+
+const phoneMq = window.matchMedia('(max-width: 600px)');
+const isPhone = () => phoneMq.matches;
+
+// "⋯": everything the sidebar's foot and the status bar hold on a bigger screen.
+$('#btnMore').onclick = (e) => {
+  e.stopPropagation();
+  const lang = currentSpellLang();
+  const spell = (v: SpellLang, label: string): CtxItem => ({
+    label: `Spell-check: ${label}`, icon: lang === v ? '✓' : '', run: () => spellFootOpts.find((o) => o.dataset.value === v)?.click(),
+  });
+  showCtx(0, 0, [
+    { label: 'Focus mode', run: () => toggleFocus(true) },
+    spell('en', 'en'), spell('uk', 'ua'), spell('ru', 'ru'),
+    { sep: true, label: '' },
+    { label: 'History', run: () => $('#btnHistory').click() },
+    { label: 'Export', run: () => $('#btnExport').click() },
+    { label: 'Import', run: () => $('#btnImport').click() },
+    { label: 'Bin', run: () => $('#btnTrash').click() },
+    { label: 'Settings', run: () => $('#btnSettings').click() },
+  ]);
+};
+
+// Tapping the dimmed page behind an open remarks sheet closes it.
+document.addEventListener('click', (e) => {
+  if (isPhone() && e.target === document.body && remarksShown()) toggleRemarksPanel(false);
+});
+
+// A long press on a chapter or note opens the same menu as a right-click (iPhone Safari never sends one).
+{
+  let timer = 0;
+  let fired = false;
+  let start: { x: number; y: number } | null = null;
+  const lists = $('#lists');
+  lists.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    const row = (e.target as HTMLElement).closest('.doclist li');
+    if (!row || e.touches.length > 1 || (e.target as HTMLElement).closest('.grip')) return;
+    start = { x: t.clientX, y: t.clientY };
+    fired = false;
+    timer = window.setTimeout(() => {
+      start = null;
+      fired = true;
+      row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: t.clientX, clientY: t.clientY }));
+    }, 500);
+  }, { passive: true });
+  const cancel = () => { clearTimeout(timer); start = null; };
+  lists.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    if (start && Math.hypot(t.clientX - start.x, t.clientY - start.y) > 10) cancel();
+  }, { passive: true });
+  // the finger lifting off would otherwise also "click": open the chapter and close the menu again
+  lists.addEventListener('touchend', (e) => { if (fired) e.preventDefault(); fired = false; cancel(); });
+  lists.addEventListener('touchcancel', cancel);
+}
+
+// Chapters and Notes can each be folded away, at every width. Remembered between launches.
+for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>('.sec-toggle'))) {
+  const key = `inkwell.folded.${b.dataset.sec}`;
+  const set = (folded: boolean) => {
+    b.closest('section')!.classList.toggle('folded', folded);
+    b.setAttribute('aria-expanded', String(!folded));
+    try { lsSet(key, folded ? '1' : ''); } catch { /* ignore */ }
+  };
+  set(lsGet(key) === '1');
+  b.onclick = () => set(b.getAttribute('aria-expanded') === 'true');
+}
 
 // Small screens: the chapter list slides in over the text.
 $('#btnNav').onclick = () => document.body.classList.toggle('nav-open');
