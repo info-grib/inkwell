@@ -8,7 +8,9 @@ import Typography from '@tiptap/extension-typography';
 import { Remark, activeRemarkKey, collectRemarkRanges } from './remark';
 import { initBlockUi } from './blocks';
 import { makeSortable, wasDragged } from './sortable';
-import { applyWindowLook, isMacApp } from './mac';
+import { applyAppIcon, applyWindowLook, isMacApp } from './mac';
+import iconInkUrl from './assets/icon-ink.png';
+import iconIUrl from './assets/icon-i.png';
 import {
   ARTIFACT, canPickFolder, forgetLastProject, hasBrowserStorage, lastProject, openBrowserStorage, pickFolder, saveFiles, saveTextFile,
   type Fs,
@@ -119,13 +121,15 @@ interface Settings {
   /** Mac app only: how see-through the sidebar is (0-100; 100 = the plain blur of the system) and the page (0-60; 0 = solid). */
   sideTransp: number;
   pageTransp: number;
+  /** Mac app only: which app icon to show ("ink" is the built-in one). */
+  appIcon: 'ink' | 'i';
   quotes: 'english' | 'ukrainian' | 'guillemets' | 'german' | 'off';
   dashes: boolean;
   goal: number;
 }
 const DEFAULT_ACCENT = '#2b4bd6';
 const DEFAULTS: Settings = {
-  theme: 'auto', docFont: 'courier', uiFont: 'plex', size: 17, accent: '', translucent: true, sideTransp: 100, pageTransp: 0,
+  theme: 'auto', docFont: 'courier', uiFont: 'plex', size: 17, accent: '', translucent: true, sideTransp: 100, pageTransp: 0, appIcon: 'ink',
   quotes: 'english', dashes: true, goal: 500,
 };
 let settings: Settings = { ...DEFAULTS };
@@ -174,6 +178,7 @@ function applySettings() {
   root.style.setProperty('--side-veil', 100 - clamp(settings.sideTransp, 0, 100) + '%');
   root.style.setProperty('--page-veil', 100 - clamp(settings.pageTransp, 0, 60) + '%');
   void applyWindowLook(settings.translucent, settings.theme);
+  void applyAppIcon(settings.appIcon);
   scheduleLayout();
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySettings);
@@ -1764,6 +1769,19 @@ $('#btnSettings').onclick = () => {
         return box;
       };
       row('Sidebar transparency', slider(settings.sideTransp, 100, (v) => { settings.sideTransp = v; commit(); }), '100% is the plain blur of macOS; lower makes the sidebar more solid.');
+      const icons = el('div', 'iconpick');
+      for (const [v, url, name] of [['ink', iconInkUrl, 'ink'], ['i', iconIUrl, 'i']] as const) {
+        const b = el('button'); b.type = 'button'; b.title = name; b.setAttribute('aria-label', 'App icon: ' + name);
+        const img = el('img'); img.src = url; img.alt = '';
+        b.append(img);
+        b.classList.toggle('on', settings.appIcon === v);
+        b.onclick = () => {
+          settings.appIcon = v; commit();
+          icons.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+        };
+        icons.append(b);
+      }
+      row('App icon', icons, 'Shown in the Dock and Finder.');
       row('Page transparency', slider(settings.pageTransp, 60, (v) => { settings.pageTransp = v; commit(); }), '0% keeps the page solid; more lets the desktop show through the text page.');
     }
     row('Quotation marks', select([['english', '“English”'], ['ukrainian', '«Українські»'], ['guillemets', '«Guillemets»'], ['german', '„German“'], ['off', 'Leave straight']], settings.quotes, (v) => { settings.quotes = v as Settings['quotes']; commit(true); }), 'Type a plain " or \' and it becomes this style as you type. Only new typing changes — text you already wrote stays as it is.');

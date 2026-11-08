@@ -36,3 +36,17 @@ export async function applyWindowLook(translucent: boolean, theme: 'auto' | 'lig
     document.body.classList.remove('translucent');
   }
 }
+
+let lastIcon = '';
+
+/** Switch the app icon (Dock and Finder). "ink" is the built-in one. Mac app only. */
+export async function applyAppIcon(name: string): Promise<void> {
+  if (!isMacApp() || name === lastIcon) return;
+  lastIcon = name;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('set_app_icon', { name });
+  } catch (e) {
+    console.warn('app icon unavailable', e);
+  }
+}
